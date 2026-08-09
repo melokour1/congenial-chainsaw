@@ -6,6 +6,11 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "expo-env.d.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
