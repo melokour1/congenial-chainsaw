@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #F6F6F6;
+  --surface: #FFFFFF;
+  --fg: #000000;
+  --fg-muted: #6B6B6B;
+  --border: #E5E5E5;
+}
+
+.dark {
+  --bg: #000000;
+  --surface: #1A1A1A;
+  --fg: #FFFFFF;
+  --fg-muted: #A0A0A0;
+  --border: #2A2A2A;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Inter, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* min 48px touch targets per design system */
+button, a[role='button'] {
+  min-height: 48px;
+}
