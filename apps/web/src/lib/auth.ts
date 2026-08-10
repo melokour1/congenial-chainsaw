@@ -23,7 +23,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 }
 
 /** Server Component guard — redirects if not signed in, or wrong role. */
-export async function requireRole(role: Profile['role'], redirectTo = '/'): Promise<Profile> {
+export async function requireRole(role: Profile['role'], redirectTo = '/login'): Promise<Profile> {
   const profile = await getCurrentProfile();
   if (!profile || profile.role !== role) {
     redirect(redirectTo);
