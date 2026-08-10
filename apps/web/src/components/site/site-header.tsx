@@ -18,16 +18,33 @@ const NAV_LINKS = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [role, setRole] = useState<'CUSTOMER' | 'VALET' | 'ADMIN' | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setSignedIn(!!data.user));
+
+    async function loadRole(userId: string | undefined) {
+      if (!userId) {
+        setRole(null);
+        return;
+      }
+      const { data } = await supabase.from('profiles').select('role').eq('id', userId).single();
+      setRole((data?.role as typeof role) ?? null);
+    }
+
+    supabase.auth.getUser().then(({ data }) => {
+      setSignedIn(!!data.user);
+      loadRole(data.user?.id);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setSignedIn(!!session?.user);
+      loadRole(session?.user?.id);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  const dashboardHref = role === 'ADMIN' ? '/admin' : role === 'VALET' ? '/valet' : null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-light-gray bg-off-white/90 backdrop-blur dark:border-[#2A2A2A] dark:bg-black/90">
@@ -53,9 +70,16 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-3 md:flex">
           {signedIn ? (
-            <Link href="/account">
-              <Button variant="secondary" className="h-11">Account</Button>
-            </Link>
+            <>
+              {dashboardHref && (
+                <Link href={dashboardHref}>
+                  <Button variant="ghost" className="h-11">{role === 'ADMIN' ? 'Admin' : 'Valet app'}</Button>
+                </Link>
+              )}
+              <Link href="/account">
+                <Button variant="secondary" className="h-11">Account</Button>
+              </Link>
+            </>
           ) : (
             <>
               <Link href="/login">
@@ -94,11 +118,18 @@ export function SiteHeader() {
             <Link href="/about" className="rounded-card px-2 py-3 text-sm font-medium text-medium-gray" onClick={() => setMenuOpen(false)}>
               About
             </Link>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-col gap-2">
               {signedIn ? (
-                <Link href="/account" className="flex-1" onClick={() => setMenuOpen(false)}>
-                  <Button variant="secondary" className="h-11 w-full">Account</Button>
-                </Link>
+                <>
+                  {dashboardHref && (
+                    <Link href={dashboardHref} onClick={() => setMenuOpen(false)}>
+                      <Button variant="ghost" className="h-11 w-full">{role === 'ADMIN' ? 'Admin' : 'Valet app'}</Button>
+                    </Link>
+                  )}
+                  <Link href="/account" onClick={() => setMenuOpen(false)}>
+                    <Button variant="secondary" className="h-11 w-full">Account</Button>
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link href="/login" className="flex-1" onClick={() => setMenuOpen(false)}>
