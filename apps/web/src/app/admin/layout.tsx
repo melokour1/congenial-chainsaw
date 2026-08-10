@@ -3,7 +3,7 @@ import { Sidebar } from '@/components/admin/sidebar';
 import { SignOutButton } from '@/components/admin/sign-out-button';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const profile = await requireRole('ADMIN', '/login');
+  const profile = await requireRole('ADMIN');
 
   return (
     <div className="flex min-h-screen bg-black">
