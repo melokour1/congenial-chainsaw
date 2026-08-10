@@ -159,6 +159,9 @@ export function calcRentalPrice(input: RentalPricingInput, pricing: PricingConfi
   return sumAndFinalize(lineItems, pricing);
 }
 
+export const EXTRA_DRIVER_CENTS_PER_DAY = 1500;
+export const CHILD_SEAT_CENTS_PER_DAY = 1000;
+
 export function formatCents(cents: number): string {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }

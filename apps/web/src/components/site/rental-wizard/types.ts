@@ -1,4 +1,5 @@
 import type { DeliveryMethod, InsurancePlanTier, RentalClass } from '@laxvaletcare/shared';
+export { EXTRA_DRIVER_CENTS_PER_DAY, CHILD_SEAT_CENTS_PER_DAY } from '@laxvaletcare/shared';
 
 export interface FleetVehicleRow {
   id: string;
@@ -67,9 +68,6 @@ export const STEP_LABELS = [
   'Review & pay',
   'Confirmation',
 ] as const;
-
-export const EXTRA_DRIVER_CENTS_PER_DAY = 1500;
-export const CHILD_SEAT_CENTS_PER_DAY = 1000;
 
 export function initialRentalWizardData(overrides?: Partial<RentalWizardData>): RentalWizardData {
   return {
