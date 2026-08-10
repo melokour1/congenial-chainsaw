@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 /** "Talk to a human" — flips the thread to HUMAN_REQUESTED; it shows up in Admin > Live Chats. */
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 

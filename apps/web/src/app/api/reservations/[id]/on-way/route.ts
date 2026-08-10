@@ -5,8 +5,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { dispatchNextInQueue } from '@/lib/queue';
 
 /** Customer taps "I'm on my way" — dispatches a DEPARTURE job offer to the next available valet in the fair queue. */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -18,8 +19,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     customerEtaBand: parsed.data.etaBand,
     customerEtaMinutes: parsed.data.etaMinutes ?? null,
     customerOnWayAt: new Date().toISOString(),
-  }).eq('id', params.id);
+  }).eq('id', id);
 
-  const offer = await dispatchNextInQueue(admin, { reservationId: params.id, jobType: 'DEPARTURE' });
+  const offer = await dispatchNextInQueue(admin, { reservationId: id, jobType: 'DEPARTURE' });
   return NextResponse.json({ dispatched: !!offer, valetId: offer?.valetId ?? null });
 }

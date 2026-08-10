@@ -11,11 +11,12 @@ export interface Profile {
   valetStatus: 'AVAILABLE' | 'BUSY' | 'BREAK' | 'OFF' | null;
   queuePosition: number | null;
   clockedInAt: string | null;
+  sessionExpiresAt: string | null;
 }
 
 /** Current signed-in user's profile row, or null if signed out. Respects RLS (own row only). */
 export async function getCurrentProfile(): Promise<Profile | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();

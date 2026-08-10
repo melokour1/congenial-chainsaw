@@ -6,7 +6,7 @@ type Status = 'AVAILABLE' | 'BUSY' | 'BREAK';
 
 /** [Take Break] / [Back to available] toggle in the valet top bar. Clock in/out is handled by /api/valet/clock. */
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 

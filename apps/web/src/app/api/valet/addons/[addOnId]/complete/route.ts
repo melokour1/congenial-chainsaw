@@ -15,8 +15,9 @@ const ADD_ON_LABEL: Record<string, string> = {
  * uploaded via POST /api/photos (stage: 'ADDON', reservationId) before this is called — this
  * route just flips the add-on's status and notifies the customer.
  */
-export async function POST(_request: Request, { params }: { params: { addOnId: string } }) {
-  const supabase = createClient();
+export async function POST(_request: Request, { params }: { params: Promise<{ addOnId: string }> }) {
+  const { addOnId } = await params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -26,18 +27,18 @@ export async function POST(_request: Request, { params }: { params: { addOnId: s
   }
 
   const admin = createAdminClient();
-  const { data: addOn } = await admin.from('reservation_add_ons').select('*').eq('id', params.addOnId).single();
+  const { data: addOn } = await admin.from('reservation_add_ons').select('*').eq('id', addOnId).single();
   if (!addOn) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
   const completedAt = new Date().toISOString();
-  await admin.from('reservation_add_ons').update({ status: 'COMPLETE', completedAt }).eq('id', params.addOnId);
+  await admin.from('reservation_add_ons').update({ status: 'COMPLETE', completedAt }).eq('id', addOnId);
 
   const { data: reservation } = await admin.from('reservations').select('id, customerId, customer:profiles!reservations_customerId_fkey(email, phone)').eq('id', addOn.reservationId).single();
 
   const label = ADD_ON_LABEL[addOn.type] ?? addOn.type;
   await admin.from('activity_logs').insert({
     id: crypto.randomUUID(), reservationId: addOn.reservationId, actorId: user.id,
-    action: `Completed add-on: ${label}`, detail: { addOnId: params.addOnId },
+    action: `Completed add-on: ${label}`, detail: { addOnId },
   });
 
   if (reservation) {

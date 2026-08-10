@@ -4,14 +4,15 @@ import { CustomerDetail } from '@/components/admin/customer-detail';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
+export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const admin = createAdminClient();
   const [{ data: customer }, { data: reservations }, { data: rentals }, { data: verification }, { data: chatThreads }] = await Promise.all([
-    admin.from('profiles').select('id, fullName, email, phone, createdAt').eq('id', params.id).eq('role', 'CUSTOMER').single(),
-    admin.from('reservations').select('id, bookingCode, status, totalCents, departureDate').eq('customerId', params.id).order('departureDate', { ascending: false }),
-    admin.from('rental_bookings').select('id, bookingCode, status, totalCents, pickupDate').eq('customerId', params.id).order('pickupDate', { ascending: false }),
-    admin.from('rental_verifications').select('*').eq('customerId', params.id).maybeSingle(),
-    admin.from('chat_threads').select('id, status, lastMessageAt').eq('customerId', params.id).order('lastMessageAt', { ascending: false }),
+    admin.from('profiles').select('id, fullName, email, phone, createdAt').eq('id', id).eq('role', 'CUSTOMER').single(),
+    admin.from('reservations').select('id, bookingCode, status, totalCents, departureDate').eq('customerId', id).order('departureDate', { ascending: false }),
+    admin.from('rental_bookings').select('id, bookingCode, status, totalCents, pickupDate').eq('customerId', id).order('pickupDate', { ascending: false }),
+    admin.from('rental_verifications').select('*').eq('customerId', id).maybeSingle(),
+    admin.from('chat_threads').select('id, status, lastMessageAt').eq('customerId', id).order('lastMessageAt', { ascending: false }),
   ]);
 
   if (!customer) notFound();

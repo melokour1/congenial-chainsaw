@@ -4,7 +4,7 @@ import { sendNotification } from '@/lib/notifications';
 
 /** Admin > "Send Notification" button (reservation/rental detail, or ad-hoc from Notifications page). */
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = user ? await supabase.from('profiles').select('role').eq('id', user.id).single() : { data: null };
   if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'forbidden' }, { status: 403 });

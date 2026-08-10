@@ -14,7 +14,7 @@ them to a human and to expect a reply within about 5 minutes.`;
 
 /** Sends a customer message; replies with Claude unless the thread has been escalated to a human. */
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 

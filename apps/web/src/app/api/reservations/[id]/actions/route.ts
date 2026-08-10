@@ -50,8 +50,9 @@ const TRANSITIONS: Record<ActionType, { status: string; title: (r: any) => strin
   },
 };
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -68,13 +69,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const { data: reservation } = await admin
     .from('reservations')
     .select('*, terminal:terminals(code)')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
   if (!reservation) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
-  await admin.from('reservations').update({ status: transition.status }).eq('id', params.id);
+  await admin.from('reservations').update({ status: transition.status }).eq('id', id);
   await admin.from('activity_logs').insert({
-    id: crypto.randomUUID(), reservationId: params.id, actorId: user.id, action, detail: null,
+    id: crypto.randomUUID(), reservationId: id, actorId: user.id, action, detail: null,
   });
 
   await sendNotification({
@@ -82,7 +83,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     title: transition.title(reservation),
     body: transition.body(reservation),
     type: `RESERVATION_${action}`,
-    reservationId: params.id,
+    reservationId: id,
   });
 
   if (action === 'VEHICLE_DELIVERED') {

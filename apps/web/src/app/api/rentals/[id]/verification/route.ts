@@ -9,8 +9,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
  * their URLs are passed in here. Face-match itself needs Stripe Identity/Onfido — see
  * FaceMatchStatus.MANUAL_REVIEW fallback and docs/HANDOFF.md for wiring a real provider.
  */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -52,7 +53,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }, { onConflict: 'customerId' });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await admin.from('rental_bookings').update({ status: 'PENDING_INSURANCE' }).eq('id', params.id).eq('customerId', user.id);
+  await admin.from('rental_bookings').update({ status: 'PENDING_INSURANCE' }).eq('id', id).eq('customerId', user.id);
 
   return NextResponse.json({ faceMatchStatus });
 }

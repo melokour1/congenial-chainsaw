@@ -5,7 +5,7 @@ import { sendNotification } from '@/lib/notifications';
 
 /** Admin > Live Chats reply — appears in the customer's same thread, labeled 👤 LAXValetCare Team. */
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = user ? await supabase.from('profiles').select('role').eq('id', user.id).single() : { data: null };
   if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'forbidden' }, { status: 403 });

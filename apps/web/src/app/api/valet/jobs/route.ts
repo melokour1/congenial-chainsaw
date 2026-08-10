@@ -26,7 +26,7 @@ const RESERVATION_SELECT = `*,
 const OFFER_SELECT = `*, reservation:reservations(id, bookingCode, vehicleColor, vehicleMake, vehicleModel, transmission, plate, terminal:terminals(code), customer:profiles!reservations_customerId_fkey(fullName))`;
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 

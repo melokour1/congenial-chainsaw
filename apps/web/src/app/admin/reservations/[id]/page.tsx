@@ -14,10 +14,11 @@ const FULL_SELECT = `*,
   activityLogs:activity_logs(*, actor:profiles(fullName)),
   rating:ratings(*)`;
 
-export default async function AdminReservationDetailPage({ params }: { params: { id: string } }) {
+export default async function AdminReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const admin = createAdminClient();
   const [{ data: reservation }, { data: valets }] = await Promise.all([
-    admin.from('reservations').select(FULL_SELECT).eq('id', params.id).single(),
+    admin.from('reservations').select(FULL_SELECT).eq('id', id).single(),
     admin.from('profiles').select('id, fullName, valetStatus').eq('role', 'VALET').order('fullName'),
   ]);
 

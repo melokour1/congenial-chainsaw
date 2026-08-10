@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 /** Admin > Settings — upserts any app_settings row (key='pricing' | 'business' | 'chat' | 'overdue_escalation' | ...). */
 export async function PATCH(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = user ? await supabase.from('profiles').select('role').eq('id', user.id).single() : { data: null };
   if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'forbidden' }, { status: 403 });

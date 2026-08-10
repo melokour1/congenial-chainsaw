@@ -4,11 +4,12 @@ import { FleetVehicleDetail } from '@/components/admin/fleet-vehicle-detail';
 
 export const dynamic = 'force-dynamic';
 
-export default async function FleetVehicleDetailPage({ params }: { params: { id: string } }) {
+export default async function FleetVehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const admin = createAdminClient();
   const [{ data: vehicle }, { data: history }] = await Promise.all([
-    admin.from('fleet_vehicles').select('*').eq('id', params.id).single(),
-    admin.from('rental_bookings').select('id, bookingCode, status, pickupDate, returnDate, totalCents, customer:profiles!rental_bookings_customerId_fkey(fullName)').eq('fleetVehicleId', params.id).order('pickupDate', { ascending: false }),
+    admin.from('fleet_vehicles').select('*').eq('id', id).single(),
+    admin.from('rental_bookings').select('id, bookingCode, status, pickupDate, returnDate, totalCents, customer:profiles!rental_bookings_customerId_fkey(fullName)').eq('fleetVehicleId', id).order('pickupDate', { ascending: false }),
   ]);
 
   if (!vehicle) notFound();

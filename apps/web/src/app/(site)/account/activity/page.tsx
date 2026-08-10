@@ -10,7 +10,7 @@ export default async function ActivityPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect('/login?next=/account/activity');
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: reservations }, { data: rentals }] = await Promise.all([
     supabase.from('reservations').select('*').eq('customerId', profile.id).order('createdAt', { ascending: false }),
     supabase.from('rental_bookings').select('*, fleetVehicle:fleet_vehicles(*)').eq('customerId', profile.id).order('createdAt', { ascending: false }),

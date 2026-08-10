@@ -5,7 +5,7 @@ import { uploadDataUrl } from '@/lib/storage';
 
 /** Valet profile photo upload (spec 4.9 — required, flagged if missing). */
 export async function PATCH(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
