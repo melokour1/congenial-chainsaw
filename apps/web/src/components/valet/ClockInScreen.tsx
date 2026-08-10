@@ -25,7 +25,7 @@ export function ClockInScreen() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-black px-6 text-center text-white">
       <div className="space-y-2">
         <p className="font-display text-2xl font-bold">Welcome back, {profile.fullName.split(' ')[0]}</p>
-        <p className="text-medium-gray">You're clocked out. Clock in to see today's jobs and join the queue.</p>
+        <p className="text-medium-gray">You&apos;re clocked out. Clock in to see today&apos;s jobs and join the queue.</p>
       </div>
       <Button
         variant="primary"

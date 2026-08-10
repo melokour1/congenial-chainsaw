@@ -21,7 +21,7 @@ export function ValetsTable({ valets }: { valets: ValetRow[] }) {
           <tr>
             <th className="px-4 py-3">Name</th>
             <th className="px-4 py-3">Queue #</th>
-            <th className="px-4 py-3">Today's jobs</th>
+            <th className="px-4 py-3">Today&apos;s jobs</th>
             <th className="px-4 py-3">Status</th>
           </tr>
         </thead>

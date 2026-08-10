@@ -117,7 +117,7 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="mb-4 font-display text-lg font-bold text-white">Today's alerts</h2>
+          <h2 className="mb-4 font-display text-lg font-bold text-white">Today&apos;s alerts</h2>
           <div className="flex flex-col gap-3">
             {(recentAlerts ?? []).length === 0 && <p className="text-sm text-medium-gray">No alerts.</p>}
             {(recentAlerts ?? []).map((n) => (

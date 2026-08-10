@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Test (shared pricing/validation logic)
+        run: npm test
+
+      - name: Lint (apps/web)
+        run: npm run lint -w apps/web
+
+      # `next build` needs live secrets (Supabase, Stripe, etc.) that aren't configured
+      # as repo secrets yet — see docs/HANDOFF.md. Add a build step here once they are.

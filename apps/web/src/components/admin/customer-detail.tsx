@@ -3,7 +3,7 @@ import { Card, StatusBadge } from '@/components/ui';
 
 interface BookingRow { id: string; bookingCode: string; status: string; totalCents: number; date: string; kind: 'Valet' | 'Rental' }
 
-interface Verification {
+type Verification = {
   fullLegalName: string; dlNumber: string; dlState: string; dlExpiry: string; faceMatchStatus: string; verifiedAt: string | null;
 } | null;
 
