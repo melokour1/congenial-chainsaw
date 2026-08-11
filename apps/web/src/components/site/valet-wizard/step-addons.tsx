@@ -30,10 +30,17 @@ export function StepAddOns({
     if (type === 'HAND_WASH') return formatCents(pricing.carCare.handWashCents);
     if (type === 'FULL_DETAIL') return formatCents(pricing.carCare.fullDetailCents);
     if (type === 'EV_CHARGE') return formatCents(pricing.carCare.evChargeCents);
-    return pricing.carCare.gasFillUpCents != null ? formatCents(pricing.carCare.gasFillUpCents) : 'Priced at fill-up';
+    return pricing.carCare.gasFillUpCents != null ? formatCents(pricing.carCare.gasFillUpCents) : 'Ask your valet — not bookable online yet';
+  }
+
+  // Gas fill-up has no fixed price (billed at pump price), so it can't be quoted or
+  // added to the total here — selecting it would silently add a $0 line item.
+  function isDisabled(type: AddOnType): boolean {
+    return type === 'GAS_FILL_UP' && pricing?.carCare.gasFillUpCents == null;
   }
 
   function toggle(type: AddOnType) {
+    if (isDisabled(type)) return;
     update({
       addOns: data.addOns.includes(type) ? data.addOns.filter((a) => a !== type) : [...data.addOns, type],
     });
@@ -47,11 +54,12 @@ export function StepAddOns({
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {ADD_ONS.map((a) => {
           const active = data.addOns.includes(a.type);
+          const disabled = isDisabled(a.type);
           return (
             <Card
               key={a.type}
               onClick={() => toggle(a.type)}
-              className={`cursor-pointer border transition-colors ${active ? 'border-black dark:border-white' : 'border-light-gray dark:border-[#2A2A2A]'}`}
+              className={`border transition-colors ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${active ? 'border-black dark:border-white' : 'border-light-gray dark:border-[#2A2A2A]'}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

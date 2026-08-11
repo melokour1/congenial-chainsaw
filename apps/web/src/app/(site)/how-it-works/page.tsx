@@ -11,7 +11,7 @@ export default function HowItWorksPage() {
           Airport valet at LAX, reinvented — here&rsquo;s exactly what happens from booking to pickup.
         </p>
       </div>
-      <HowItWorks />
+      <HowItWorks compact />
       <div className="mx-auto max-w-content px-4 pb-16 sm:px-6">
         <Link href="/book/valet">
           <Button variant="primary" className="h-12 px-8">Book valet now</Button>
