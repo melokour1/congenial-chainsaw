@@ -1,11 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
+import { PlayfairDisplay_700Bold_Italic } from '@expo-google-fonts/playfair-display';
 import { ThemeProvider, useTheme } from '../src/lib/ThemeProvider';
 import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
+
+// Kept up as soon as the module evaluates so nothing paints (blank frame or a
+// system-font flash of the logo) before fonts are ready below.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootNavigator() {
   const { theme, mode } = useTheme();
@@ -43,6 +51,27 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  // Only the two weights the <Logo> wordmark actually uses — no point pulling
+  // in whole family sets for two glyphs' worth of branding.
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_800ExtraBold,
+    PlayfairDisplay_700Bold_Italic,
+  });
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    onLayoutRootView();
+  }, [onLayoutRootView]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

@@ -18,6 +18,7 @@ const config: Config = {
       fontFamily: {
         display: ['"Plus Jakarta Sans"', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
+        wordmark: ['"Playfair Display"', 'serif'],
       },
       borderRadius: {
         card: `${radii.card}px`,

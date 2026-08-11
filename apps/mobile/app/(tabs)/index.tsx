@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useTheme } from '../../src/lib/ThemeProvider';
-import { ScreenContainer, SegmentedControl } from '../../src/components/ui';
+import { ScreenContainer, SegmentedControl, Logo } from '../../src/components/ui';
 import { ValetHomeTab } from '../../src/components/home/ValetHomeTab';
 import { RentHomeTab } from '../../src/components/home/RentHomeTab';
 import { ForYouHomeTab } from '../../src/components/home/ForYouHomeTab';
@@ -16,9 +16,9 @@ export default function HomeScreen() {
 
   return (
     <ScreenContainer edges={['top']}>
-      <Text style={{ color: theme.colors.text, fontFamily: theme.fonts.display, fontSize: 28, fontWeight: '700', marginBottom: 16 }}>
-        LAXValetCare
-      </Text>
+      <View style={{ marginBottom: 16 }}>
+        <Logo size="md" />
+      </View>
       <SegmentedControl
         value={tab}
         onChange={setTab}

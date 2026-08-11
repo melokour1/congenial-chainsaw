@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui';
+import { Button, Logo } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
@@ -49,8 +49,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-light-gray bg-off-white/90 backdrop-blur dark:border-[#2A2A2A] dark:bg-black/90">
       <div className="mx-auto flex max-w-content items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="font-display text-lg font-bold tracking-tight">
-          LAXValetCare
+        <Link href="/">
+          <Logo size="sm" />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">

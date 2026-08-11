@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { Logo } from '@/components/ui';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
@@ -24,8 +25,8 @@ export function Sidebar() {
   return (
     <nav className="flex h-full w-60 shrink-0 flex-col gap-1 border-r border-light-gray/20 bg-[var(--surface)] p-4">
       <div className="mb-6 px-2">
-        <span className="font-display text-lg font-bold text-white">LAXValetCare</span>
-        <div className="text-xs font-medium text-medium-gray">Admin</div>
+        <Logo size="sm" />
+        <div className="mt-2 text-xs font-medium text-medium-gray">Admin</div>
       </div>
       {NAV.map((item) => {
         const active = item.href === '/admin' ? pathname === '/admin' : pathname?.startsWith(item.href);

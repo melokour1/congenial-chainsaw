@@ -11,3 +11,4 @@ export { StepHeader } from './StepHeader';
 export { DateTimeField } from './DateTimeField';
 export { PhotoPickerTile } from './PhotoPickerTile';
 export { SignaturePad } from './SignaturePad';
+export { Logo } from './Logo';

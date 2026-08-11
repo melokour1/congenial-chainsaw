@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useTheme } from '../../src/lib/ThemeProvider';
 import { useAuth } from '../../src/lib/AuthProvider';
-import { ScreenContainer, Button, Input } from '../../src/components/ui';
+import { ScreenContainer, Button, Input, Logo } from '../../src/components/ui';
 
 export default function SignInScreen() {
   const { theme } = useTheme();
@@ -33,15 +33,13 @@ export default function SignInScreen() {
 
   return (
     <ScreenContainer contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-      <Text style={{ fontFamily: theme.fonts.display, fontSize: 34, fontWeight: '700', color: theme.colors.text }}>
-        LAXValetCare
-      </Text>
+      <Logo size="lg" />
       <Text
         style={{
           fontFamily: theme.fonts.body,
           fontSize: 16,
           color: theme.colors.textMuted,
-          marginTop: 8,
+          marginTop: 16,
           marginBottom: 32,
         }}
       >
