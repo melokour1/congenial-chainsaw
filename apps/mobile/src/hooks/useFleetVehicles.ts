@@ -9,11 +9,9 @@ export function useFleetVehicles() {
 
   useEffect(() => {
     let cancelled = false;
-    supabase
-      .from('fleet_vehicles')
-      .select('*')
-      .eq('status', 'AVAILABLE')
-      .order('dailyRateCents', { ascending: true })
+    Promise.resolve(
+      supabase.from('fleet_vehicles').select('*').eq('status', 'AVAILABLE').order('dailyRateCents', { ascending: true }),
+    )
       .then(({ data }) => {
         if (!cancelled) setVehicles((data as FleetVehicle[]) ?? []);
       })

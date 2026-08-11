@@ -32,11 +32,13 @@ export default function VerificationScreen() {
 
   useEffect(() => {
     if (!profile) return;
-    supabase
-      .from('rental_verifications')
-      .select('fullLegalName, dlNumber, dlState, dlExpiry, faceMatchStatus, verifiedAt')
-      .eq('customerId', profile.id)
-      .maybeSingle()
+    Promise.resolve(
+      supabase
+        .from('rental_verifications')
+        .select('fullLegalName, dlNumber, dlState, dlExpiry, faceMatchStatus, verifiedAt')
+        .eq('customerId', profile.id)
+        .maybeSingle(),
+    )
       .then(({ data }) => setRow((data as VerificationRow) ?? null))
       .finally(() => setLoading(false));
   }, [profile]);

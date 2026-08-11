@@ -4,6 +4,25 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getPricingConfig } from '@/lib/pricing-config';
 
+// Note: rental_verifications is keyed by customerId, not rentalBookingId (identity
+// verification is a one-time customer fact, not per-rental) — so it isn't embeddable here.
+const FULL_SELECT = '*, fleetVehicle:fleet_vehicles(*), photos(*)';
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const admin = createAdminClient();
+  const client = profile?.role === 'ADMIN' || profile?.role === 'VALET' ? admin : supabase;
+
+  const { data, error } = await client.from('rental_bookings').select(FULL_SELECT).eq('id', id).single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
+  return NextResponse.json(data);
+}
+
 /**
  * Customer-facing finalize step (rental wizard's Agreement + Add-ons steps).
  * Persists the signed agreement and/or add-on selections, then recalculates

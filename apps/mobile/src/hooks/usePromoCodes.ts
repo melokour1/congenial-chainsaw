@@ -17,10 +17,7 @@ export function usePromoCodes() {
 
   useEffect(() => {
     let cancelled = false;
-    supabase
-      .from('promo_codes')
-      .select('*')
-      .eq('active', true)
+    Promise.resolve(supabase.from('promo_codes').select('*').eq('active', true))
       .then(({ data }) => {
         if (!cancelled) setPromoCodes((data as PromoCode[]) ?? []);
       })

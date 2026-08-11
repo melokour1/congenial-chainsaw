@@ -8,3 +8,6 @@ export { Divider } from './Divider';
 export { PlaceholderImage } from './PlaceholderImage';
 export { EmptyState } from './EmptyState';
 export { StepHeader } from './StepHeader';
+export { DateTimeField } from './DateTimeField';
+export { PhotoPickerTile } from './PhotoPickerTile';
+export { SignaturePad } from './SignaturePad';

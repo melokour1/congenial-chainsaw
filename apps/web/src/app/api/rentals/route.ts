@@ -48,7 +48,14 @@ export async function POST(request: Request) {
     pricing,
   );
 
-  // returning customers with a prior approved verification skip re-verification (spec 1.6, Step 3)
+  // Returning customers with a verification already on file skip re-verification (spec 1.6,
+  // Step 3) — this is keyed on the row existing at all, not on faceMatchStatus === 'MATCHED',
+  // since without a real ID-verification provider configured (see the MANUAL_REVIEW fallback
+  // in the verification route) faceMatchStatus effectively never reaches MATCHED in this
+  // environment. `needsVerification` below drives whether the client shows the identity
+  // form; `status` must use the exact same condition, or a returning customer gets skipped
+  // past that form while their booking is still created as PENDING_VERIFICATION — stuck
+  // showing "Verification needed" even after they go on to submit insurance.
   const { data: existingVerification } = await admin
     .from('rental_verifications')
     .select('faceMatchStatus')
@@ -66,7 +73,7 @@ export async function POST(request: Request) {
     returnDate: input.returnDate,
     deliveryMethod: input.deliveryMethod,
     deliveryAddress: input.deliveryAddress ?? null,
-    status: existingVerification?.faceMatchStatus === 'MATCHED' ? 'PENDING_INSURANCE' : 'PENDING_VERIFICATION',
+    status: existingVerification ? 'PENDING_INSURANCE' : 'PENDING_VERIFICATION',
     insuranceOption: 'OWN',
     priceBreakdown: breakdown,
     totalCents: breakdown.totalCents,
@@ -75,7 +82,9 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await sendNotification({
-    profileId: user.id, title: 'Rental request received', body: `${vehicle.make} ${vehicle.model} — awaiting verification`,
+    profileId: user.id,
+    title: 'Rental request received',
+    body: `${vehicle.make} ${vehicle.model} — ${existingVerification ? 'awaiting insurance' : 'awaiting verification'}`,
     type: 'RENTAL_CREATED', rentalBookingId: id, email: user.email ?? undefined,
   });
 
