@@ -6,8 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
-import { PlayfairDisplay_700Bold_Italic } from '@expo-google-fonts/playfair-display';
+import { Jost_700Bold } from '@expo-google-fonts/jost';
 import { ThemeProvider, useTheme } from '../src/lib/ThemeProvider';
 import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
 
@@ -51,11 +50,10 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-  // Only the two weights the <Logo> wordmark actually uses — no point pulling
-  // in whole family sets for two glyphs' worth of branding.
+  // Only the one weight the <Logo> wordmark actually uses — no point pulling
+  // in a whole family set for three words' worth of branding.
   const [fontsLoaded, fontError] = useFonts({
-    PlusJakartaSans_800ExtraBold,
-    PlayfairDisplay_700Bold_Italic,
+    Jost_700Bold,
   });
 
   const onLayoutRootView = useCallback(async () => {
