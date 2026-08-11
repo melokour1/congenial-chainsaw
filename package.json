@@ -15,7 +15,7 @@
     "node": ">=18.18"
   },
   "overrides": {
-    "expo-font": "~12.0.10"
+    "expo-font": "~14.0.12"
   },
   "devDependencies": {
     "vitest": "^4.0.6"

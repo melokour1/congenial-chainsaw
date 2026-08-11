@@ -11,3 +11,5 @@ web-build/
 .env
 .env.local
 *.tsbuildinfo
+
+.vercel

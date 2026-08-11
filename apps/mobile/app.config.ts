@@ -19,10 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'automatic',
   backgroundColor: '#000000',
   primaryColor: '#000000',
-  splash: {
-    backgroundColor: '#000000',
-    resizeMode: 'contain',
-  },
+  newArchEnabled: true,
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
@@ -34,6 +31,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#000000',
+        resizeMode: 'contain',
+      },
+    ],
     [
       'expo-image-picker',
       {
