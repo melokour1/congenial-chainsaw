@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -25,8 +26,8 @@ export default async function ActivityPage() {
 
       {!hasAny && (
         <p className="mt-10 text-sm text-medium-gray">
-          Nothing here yet — book a <a href="/book/valet" className="underline">valet</a> or{' '}
-          <a href="/book/rent" className="underline">rental</a> to see it here.
+          Nothing here yet — book a <Link href="/book/valet" className="underline">valet</Link> or{' '}
+          <Link href="/book/rent" className="underline">rental</Link> to see it here.
         </p>
       )}
 

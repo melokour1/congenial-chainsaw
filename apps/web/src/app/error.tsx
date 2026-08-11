@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function ErrorBoundary({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -22,12 +23,12 @@ export default function ErrorBoundary({ error, reset }: { error: Error & { diges
         >
           Try again
         </button>
-        <a
+        <Link
           href="/"
           className="rounded-card border border-white px-6 py-3 text-sm font-medium text-white hover:opacity-80"
         >
           Home
-        </a>
+        </Link>
       </div>
     </div>
   );
