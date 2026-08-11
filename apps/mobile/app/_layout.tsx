@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -7,8 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import { Jost_700Bold } from '@expo-google-fonts/jost';
+import { PlayfairDisplay_700Bold_Italic } from '@expo-google-fonts/playfair-display';
 import { ThemeProvider, useTheme } from '../src/lib/ThemeProvider';
 import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
+import { SplashAnimation } from '../src/components/SplashAnimation';
 
 // Kept up as soon as the module evaluates so nothing paints (blank frame or a
 // system-font flash of the logo) before fonts are ready below.
@@ -50,11 +52,18 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-  // Only the one weight the <Logo> wordmark actually uses — no point pulling
-  // in a whole family set for three words' worth of branding.
+  // The weights <Logo> and the launch animation use — no point pulling in
+  // whole family sets for a handful of glyphs' worth of branding.
   const [fontsLoaded, fontError] = useFonts({
     Jost_700Bold,
+    PlayfairDisplay_700Bold_Italic,
   });
+
+  // Cold-start only: plays once over the top of the real app (which mounts
+  // and does its own async work — auth check, etc. — underneath it), then
+  // unmounts itself. Never shown again until the app is fully closed and
+  // relaunched.
+  const [showIntro, setShowIntro] = useState(true);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded || fontError) {
@@ -78,6 +87,7 @@ export default function RootLayout() {
             <RootNavigator />
           </AuthProvider>
         </ThemeProvider>
+        {showIntro && <SplashAnimation onComplete={() => setShowIntro(false)} />}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
