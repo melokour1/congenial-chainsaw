@@ -9,7 +9,9 @@ export async function getPricingConfig(): Promise<PricingConfig> {
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.value;
   const supabase = createAdminClient();
   const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'pricing').single();
-  if (error || !data) throw new Error('pricing config missing from app_settings');
+  if (error || !data) {
+    throw new Error(`pricing config missing from app_settings${error ? `: ${error.message}` : ''}`);
+  }
   cached = { value: data.value as PricingConfig, at: Date.now() };
   return cached.value;
 }
