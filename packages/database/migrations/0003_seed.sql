@@ -6,12 +6,12 @@ insert into terminals (id, code, name, "isOffSite", "offSiteAddress", "isClosed"
   ('term_1', '1', 'Terminal 1', false, null, false, null, 'Non-Southwest/JetBlue carriers may bus to West Gates'),
   ('term_2', '2', 'Terminal 2', false, null, false, null, null),
   ('term_3', '3', 'Terminal 3', false, null, false, null, 'Delta Hub — Delta One check-in at lower arrivals level, pillars 3F/3G'),
+  ('term_b', 'B', 'Terminal B (TBIT)', false, null, false, null, 'Located between Terminal 3 and Terminal 4 — 40+ international carriers'),
   ('term_4', '4', 'Terminal 4', false, null, false, null, null),
   ('term_5', '5', 'Terminal 5', false, null, true, 'Closed until 2028', null),
   ('term_6', '6', 'Terminal 6', false, null, false, null, null),
   ('term_7', '7', 'Terminal 7', false, null, false, null, null),
-  ('term_8', '8', 'Terminal 8', false, null, false, null, null),
-  ('term_b', 'B', 'Terminal B (TBIT)', false, null, false, null, '40+ international carriers');
+  ('term_8', '8', 'Terminal 8', false, null, false, null, null);
 
 -- ── Airlines ─────────────────────────────────────────────────────────────
 

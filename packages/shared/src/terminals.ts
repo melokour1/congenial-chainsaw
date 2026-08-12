@@ -30,6 +30,15 @@ export const TERMINALS: TerminalDef[] = [
     airlines: ['Delta', 'Aeromexico'],
   },
   {
+    code: 'B',
+    name: 'Terminal B (TBIT)',
+    note: 'Located between Terminal 3 and Terminal 4 — 40+ international carriers',
+    airlines: [
+      'Air France', 'Emirates', 'Lufthansa', 'Qantas', 'Singapore Airlines', 'Cathay Pacific',
+      'ANA', 'Korean Air', 'Qatar Airways', 'Turkish Airlines',
+    ],
+  },
+  {
     code: '4',
     name: 'Terminal 4',
     airlines: ['American Airlines', 'British Airways', 'Japan Airlines'],
@@ -55,15 +64,6 @@ export const TERMINALS: TerminalDef[] = [
     code: '8',
     name: 'Terminal 8',
     airlines: ['United Airlines', 'United Express'],
-  },
-  {
-    code: 'B',
-    name: 'Terminal B (TBIT)',
-    note: '40+ international carriers',
-    airlines: [
-      'Air France', 'Emirates', 'Lufthansa', 'Qantas', 'Singapore Airlines', 'Cathay Pacific',
-      'ANA', 'Korean Air', 'Qatar Airways', 'Turkish Airlines',
-    ],
   },
 ];
 
