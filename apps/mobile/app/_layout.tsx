@@ -51,6 +51,25 @@ function RootNavigator() {
   );
 }
 
+function AppContent() {
+  const { loading } = useAuth();
+
+  // Cold-start only: plays once over the top of the real app (which mounts
+  // and does its own async work — the auth check above — underneath it),
+  // then unmounts itself. Never shown again until the app is fully closed
+  // and relaunched. `ready` is wired to that same auth check so the splash's
+  // loading dot holds for as long as the app is genuinely still working,
+  // rather than a fixed guess at a duration.
+  const [showIntro, setShowIntro] = useState(true);
+
+  return (
+    <>
+      <RootNavigator />
+      {showIntro && <SplashAnimation ready={!loading} onComplete={() => setShowIntro(false)} />}
+    </>
+  );
+}
+
 export default function RootLayout() {
   // The weights <Logo> and the launch animation use — no point pulling in
   // whole family sets for a handful of glyphs' worth of branding.
@@ -58,12 +77,6 @@ export default function RootLayout() {
     Jost_700Bold,
     PlayfairDisplay_700Bold_Italic,
   });
-
-  // Cold-start only: plays once over the top of the real app (which mounts
-  // and does its own async work — auth check, etc. — underneath it), then
-  // unmounts itself. Never shown again until the app is fully closed and
-  // relaunched.
-  const [showIntro, setShowIntro] = useState(true);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded || fontError) {
@@ -84,10 +97,9 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <AuthProvider>
-            <RootNavigator />
+            <AppContent />
           </AuthProvider>
         </ThemeProvider>
-        {showIntro && <SplashAnimation onComplete={() => setShowIntro(false)} />}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
