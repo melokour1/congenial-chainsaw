@@ -31,13 +31,13 @@ export function StepReviewPay({
         {breakdown ? (
           <>
             {breakdown.lineItems.map((li, i) => (
-              <Row key={i} label={li.label} value={formatCents(li.cents)} theme={theme} />
+              <Row key={i} label={li.label} detail={li.detail} value={formatCents(li.cents)} theme={theme} spaced />
             ))}
-            <Divider spacing={10} />
+            <Divider spacing={12} />
             <Row label="Subtotal" value={formatCents(breakdown.subtotalCents)} theme={theme} muted />
-            <Row label="Tax" value={formatCents(breakdown.taxCents)} theme={theme} muted />
-            <Row label="Service fee" value={formatCents(breakdown.serviceFeeCents)} theme={theme} muted />
-            <Divider spacing={10} />
+            <Row label={`Tax (${breakdown.taxPct}%)`} value={formatCents(breakdown.taxCents)} theme={theme} muted />
+            <Row label={`Service fee (${breakdown.serviceFeePct}%)`} value={formatCents(breakdown.serviceFeeCents)} theme={theme} muted />
+            <Divider spacing={12} />
             <Row label="Total" value={formatCents(breakdown.totalCents)} theme={theme} bold />
           </>
         ) : (
@@ -63,12 +63,37 @@ export function StepReviewPay({
   );
 }
 
-function Row({ label, value, theme, muted, bold }: { label: string; value: string; theme: ReturnType<typeof useTheme>['theme']; muted?: boolean; bold?: boolean }) {
+function Row({
+  label,
+  detail,
+  value,
+  theme,
+  muted,
+  bold,
+  spaced,
+}: {
+  label: string;
+  detail?: string;
+  value: string;
+  theme: ReturnType<typeof useTheme>['theme'];
+  muted?: boolean;
+  bold?: boolean;
+  /** Extra vertical padding + room for a detail sub-line — used for the
+   * itemized charges, not the subtotal/tax/total summary rows below them. */
+  spaced?: boolean;
+}) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 }}>
-      <Text style={{ color: muted ? theme.colors.textMuted : theme.colors.text, fontFamily: theme.fonts.body, fontSize: bold ? 15 : 14, fontWeight: bold ? '700' : '400' }}>
-        {label}
-      </Text>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, paddingVertical: spaced ? 8 : 4 }}>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: muted ? theme.colors.textMuted : theme.colors.text, fontFamily: theme.fonts.body, fontSize: bold ? 15 : 14, fontWeight: bold ? '700' : spaced ? '600' : '400' }}>
+          {label}
+        </Text>
+        {detail && (
+          <Text style={{ color: theme.colors.textMuted, fontFamily: theme.fonts.body, fontSize: 12, marginTop: 2 }}>
+            {detail}
+          </Text>
+        )}
+      </View>
       <Text style={{ color: theme.colors.text, fontFamily: theme.fonts.body, fontSize: bold ? 15 : 14, fontWeight: bold ? '700' : '600' }}>
         {value}
       </Text>

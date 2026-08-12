@@ -27,8 +27,11 @@ describe('calcValetPrice', () => {
     );
     expect(b.subtotalCents).toBe(4695 * 3); // 3 days
     expect(b.taxCents).toBe(Math.round(b.subtotalCents * 0.1));
+    expect(b.taxPct).toBe(10);
     expect(b.serviceFeeCents).toBe(Math.round(b.subtotalCents * 0.125));
+    expect(b.serviceFeePct).toBe(12.5);
     expect(b.totalCents).toBe(b.subtotalCents + b.taxCents + b.serviceFeeCents);
+    expect(b.lineItems[0].detail).toBe('$46.95/day × 3 days');
   });
 
   it('rounds up partial days (a booking under 24h still bills 1 day)', () => {
@@ -45,8 +48,8 @@ describe('calcValetPrice', () => {
       PRICING,
     );
     expect(b.lineItems).toEqual([
-      { label: 'Standard valet — 1 day', cents: 4695 },
-      { label: 'VIP Express (2 persons)', cents: 100000 },
+      { label: 'Standard valet — 1 day', cents: 4695, detail: '$46.95/day × 1 day' },
+      { label: 'VIP Express (2 persons)', cents: 100000, detail: '$500.00/person × 2 persons' },
     ]);
     expect(b.subtotalCents).toBe(4695 + 100000);
   });
@@ -108,6 +111,7 @@ describe('calcRentalPrice', () => {
     const expected = Math.round(4500 * 7 * (1 - 17.5 / 100));
     expect(b.lineItems[0].cents).toBe(expected);
     expect(b.lineItems[0].label).toContain('Weekly discount');
+    expect(b.lineItems[0].detail).toBe('$45.00/day × 7 days, less 17.5% weekly discount');
   });
 
   it('applies the monthly discount (not weekly) at exactly 30 days', () => {

@@ -67,37 +67,40 @@ export function StepReviewPay({
       <Card className="mt-6 border border-light-gray dark:border-[#2A2A2A]">
         {breakdown ? (
           <>
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-4">
               {breakdown.lineItems.map((li, i) => (
-                <li key={i} className="flex justify-between text-sm">
-                  <span className="text-medium-gray">{li.label}</span>
-                  <span>{formatCents(li.cents)}</span>
+                <li key={i} className="flex items-start justify-between gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">{li.label}</div>
+                    {li.detail && <div className="mt-0.5 text-xs text-medium-gray">{li.detail}</div>}
+                  </div>
+                  <span className="whitespace-nowrap tabular-nums">{formatCents(li.cents)}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-3 flex flex-col gap-1.5 border-t border-light-gray pt-3 text-sm dark:border-[#2A2A2A]">
+            <div className="mt-5 flex flex-col gap-2 border-t border-light-gray pt-4 text-sm dark:border-[#2A2A2A]">
               <div className="flex justify-between text-medium-gray">
                 <span>Subtotal</span>
-                <span>{formatCents(breakdown.subtotalCents)}</span>
+                <span className="tabular-nums">{formatCents(breakdown.subtotalCents)}</span>
               </div>
               <div className="flex justify-between text-medium-gray">
-                <span>Tax</span>
-                <span>{formatCents(breakdown.taxCents)}</span>
+                <span>Tax ({breakdown.taxPct}%)</span>
+                <span className="tabular-nums">{formatCents(breakdown.taxCents)}</span>
               </div>
               <div className="flex justify-between text-medium-gray">
-                <span>Service fee</span>
-                <span>{formatCents(breakdown.serviceFeeCents)}</span>
+                <span>Service fee ({breakdown.serviceFeePct}%)</span>
+                <span className="tabular-nums">{formatCents(breakdown.serviceFeeCents)}</span>
               </div>
               {breakdown.gratuityCents > 0 && (
                 <div className="flex justify-between text-medium-gray">
                   <span>Gratuity</span>
-                  <span>{formatCents(breakdown.gratuityCents)}</span>
+                  <span className="tabular-nums">{formatCents(breakdown.gratuityCents)}</span>
                 </div>
               )}
             </div>
-            <div className="mt-3 flex justify-between border-t border-light-gray pt-3 font-display text-lg font-bold dark:border-[#2A2A2A]">
+            <div className="mt-4 flex justify-between border-t border-light-gray pt-4 font-display text-lg font-bold dark:border-[#2A2A2A]">
               <span>Total</span>
-              <span>{formatCents(breakdown.totalCents)}</span>
+              <span className="tabular-nums">{formatCents(breakdown.totalCents)}</span>
             </div>
           </>
         ) : (
