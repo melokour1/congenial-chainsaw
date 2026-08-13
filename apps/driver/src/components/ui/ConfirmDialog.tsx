@@ -23,6 +23,10 @@ export function ConfirmDialog({ title, sendMessage, message, confirmLabel = 'Yes
     setLoading(true);
     try {
       await onConfirm();
+    } catch {
+      // The caller is responsible for surfacing its own error (toast, etc.) —
+      // this just needs to not crash the dialog into an unhandled rejection
+      // and to leave it open with its buttons re-enabled so the driver can retry.
     } finally {
       setLoading(false);
     }

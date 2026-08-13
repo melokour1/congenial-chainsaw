@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../lib/api';
+import { haptics } from '../../lib/haptics';
 import { COLORS, RADII } from '../../lib/theme';
+import { useToast } from '../../lib/ToastProvider';
 import type { JobOfferSummary } from '../../lib/types';
 import { Button } from '../ui/Button';
 
@@ -25,19 +27,30 @@ export function JobAlarmModal({ offer, onResolved }: { offer: JobOfferSummary; o
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
   const [responding, setResponding] = useState(false);
   const resolvedRef = useRef(false);
+  const { showToast } = useToast();
 
   const respond = async (response: 'ACCEPTED' | 'DECLINED' | 'EXPIRED') => {
     if (resolvedRef.current) return;
     resolvedRef.current = true;
     setResponding(true);
+    if (response !== 'EXPIRED') haptics.tap();
     try {
       await api.post(`/api/queue/offers/${offer.id}/respond`, { response });
     } catch {
-      // best-effort — either way, stop blocking the driver on this screen
+      // Best-effort — either way, stop blocking the driver on this screen; if
+      // the response genuinely didn't land, the offer will just reappear on
+      // the next jobs poll rather than leaving the driver stuck here.
+      showToast("Couldn't reach LAXValetCare — this offer may reappear shortly.", 'error');
     } finally {
       onResolved();
     }
   };
+
+  // A new offer landing is the single most time-sensitive moment in this app —
+  // it deserves a distinct, attention-getting buzz, not just a silent screen swap.
+  useEffect(() => {
+    haptics.alert();
+  }, []);
 
   useEffect(() => {
     if (secondsLeft <= 0) {

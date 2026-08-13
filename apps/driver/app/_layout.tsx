@@ -7,6 +7,9 @@ import { useFonts } from 'expo-font';
 import { Jost_700Bold } from '@expo-google-fonts/jost';
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../src/lib/AuthProvider';
+import { NetworkProvider } from '../src/lib/NetworkProvider';
+import { ToastProvider } from '../src/lib/ToastProvider';
+import { OfflineBanner } from '../src/components/ui/OfflineBanner';
 
 // Kept up as soon as the module evaluates so nothing paints before fonts are ready below.
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -31,10 +34,15 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#000000' } }} />
-        </AuthProvider>
+        <NetworkProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <StatusBar style="light" />
+              <OfflineBanner />
+              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#000000' } }} />
+            </AuthProvider>
+          </ToastProvider>
+        </NetworkProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

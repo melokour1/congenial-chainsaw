@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { api } from '../../lib/api';
+import { api, ApiError } from '../../lib/api';
 import { ADD_ON_LABEL } from '../../lib/actionCopy';
+import { haptics } from '../../lib/haptics';
 import { COLORS, RADII } from '../../lib/theme';
+import { useToast } from '../../lib/ToastProvider';
 import type { AddOn, ReservationJob } from '../../lib/types';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { CameraCaptureSheet } from './CameraCaptureSheet';
@@ -12,6 +14,8 @@ export function AddOnChecklist({ reservation, readOnly, onCompleted }: { reserva
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<AddOn | null>(null);
   const [step, setStep] = useState<'confirm' | 'photos' | null>(null);
+  const [finishing, setFinishing] = useState(false);
+  const { showToast } = useToast();
 
   if (reservation.addOns.length === 0) return null;
 
@@ -23,10 +27,23 @@ export function AddOnChecklist({ reservation, readOnly, onCompleted }: { reserva
 
   const finish = async () => {
     if (!pending) return;
-    await api.post(`/api/valet/addons/${pending.id}/complete`);
-    onCompleted(pending.id);
-    setPending(null);
-    setStep(null);
+    setFinishing(true);
+    try {
+      await api.post(`/api/valet/addons/${pending.id}/complete`);
+      haptics.success();
+      showToast(`${ADD_ON_LABEL[pending.type] ?? pending.type} marked complete`, 'success');
+      onCompleted(pending.id);
+      setPending(null);
+      setStep(null);
+    } catch (err) {
+      // Leave the photo sheet open (its photos are already uploaded and kept
+      // in its own state) so the driver can just tap "Use these photos" again
+      // instead of re-taking anything.
+      showToast(err instanceof ApiError ? err.message : 'Could not mark this complete — try again.', 'error');
+      haptics.error();
+    } finally {
+      setFinishing(false);
+    }
   };
 
   const doneCount = reservation.addOns.filter((a) => a.status === 'COMPLETE').length;
@@ -72,6 +89,7 @@ export function AddOnChecklist({ reservation, readOnly, onCompleted }: { reserva
           reservationId={reservation.id}
           onDone={finish}
           onCancel={() => { setPending(null); setStep(null); }}
+          submitting={finishing}
         />
       )}
     </View>

@@ -5,11 +5,13 @@ import { formatCents } from '@laxvaletcare/shared';
 import { api } from '../../../src/lib/api';
 import { useDriver } from '../../../src/lib/DriverProvider';
 import { useJobs } from '../../../src/lib/JobsProvider';
+import { withRetry } from '../../../src/lib/retry';
 import { isSameDayAsOffset } from '../../../src/components/driver/DateSelector';
 import { COLORS, RADII } from '../../../src/lib/theme';
 import type { Assignment, ValetStats } from '../../../src/lib/types';
 import { Card } from '../../../src/components/ui/Card';
 import { ConfirmDialog } from '../../../src/components/ui/ConfirmDialog';
+import { Skeleton } from '../../../src/components/ui/Skeleton';
 import { JobListItem } from '../../../src/components/driver/JobListItem';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
 
@@ -27,7 +29,7 @@ export default function Home() {
   const [confirmClockOut, setConfirmClockOut] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadStats = () => api.get<ValetStats>('/api/valet/stats').then(setStats).catch(() => {});
+  const loadStats = () => withRetry(() => api.get<ValetStats>('/api/valet/stats')).then(setStats).catch(() => {});
 
   useEffect(() => {
     loadStats();
@@ -43,6 +45,8 @@ export default function Home() {
     setBusy(true);
     try {
       await setStatus(profile.valetStatus === 'BREAK' ? 'AVAILABLE' : 'BREAK');
+    } catch {
+      // setStatus already reports this via toast — nothing further to do here.
     } finally {
       setBusy(false);
     }
@@ -105,9 +109,9 @@ export default function Home() {
       <Card style={styles.statsCard}>
         <Text style={styles.statsTitle}>Today</Text>
         <View style={styles.statsRow}>
-          <Stat value={stats ? String(stats.today.jobsCompleted) : '—'} label="Jobs done" />
+          <Stat value={stats ? String(stats.today.jobsCompleted) : null} label="Jobs done" />
           <Stat value={hoursOnline(profile.clockedInAt)} label="Hours online" />
-          <Stat value={stats ? formatCents(stats.today.tipsTotalCents) : '—'} label="Tips" />
+          <Stat value={stats ? formatCents(stats.today.tipsTotalCents) : null} label="Tips" />
         </View>
       </Card>
 
@@ -146,10 +150,14 @@ export default function Home() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({ value, label }: { value: string | null; label: string }) {
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text style={styles.statValue}>{value}</Text>
+      {value === null ? (
+        <Skeleton width={36} height={20} style={{ marginBottom: 2 }} />
+      ) : (
+        <Text style={styles.statValue}>{value}</Text>
+      )}
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );

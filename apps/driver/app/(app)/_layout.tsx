@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '../../src/lib/AuthProvider';
@@ -31,17 +31,39 @@ function Gate({ children }: { children: React.ReactNode }) {
 
 export default function AppLayout() {
   const { session, profile, loading } = useAuth();
+  // AuthProvider's `loading`/`profile` flip briefly on every background auth
+  // event once signed in (a token auto-refresh, this screen's own password
+  // change) — not just the initial sign-in. Gating on those every render
+  // would unmount this whole subtree (Stack included) and remount it each
+  // time, silently resetting navigation back to whatever the default tab is.
+  // So the loading spinner and role check only ever run once, on the very
+  // first pass; after that, only an actual sign-out (session going null)
+  // should kick the driver back out.
+  const enteredRef = useRef(false);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.black }}>
-        <ActivityIndicator color={COLORS.white} />
-      </View>
-    );
+  if (!enteredRef.current) {
+    if (loading) {
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.black }}>
+          <ActivityIndicator color={COLORS.white} />
+        </View>
+      );
+    }
+    if (!session || !profile || profile.role !== 'VALET') {
+      return <Redirect href="/sign-in" />;
+    }
+    enteredRef.current = true;
   }
 
-  if (!session || !profile || profile.role !== 'VALET') {
+  if (!session) {
+    enteredRef.current = false;
     return <Redirect href="/sign-in" />;
+  }
+
+  if (!profile) {
+    // Between sign-out clearing profile and the redirect above actually
+    // navigating — a one-frame gap, not a real loading state to react to.
+    return null;
   }
 
   return (

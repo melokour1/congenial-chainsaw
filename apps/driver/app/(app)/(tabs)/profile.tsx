@@ -1,35 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { formatCents } from '@laxvaletcare/shared';
-import { api } from '../../../src/lib/api';
-import { supabase } from '../../../src/lib/supabase';
+import { api, ApiError } from '../../../src/lib/api';
+import { haptics } from '../../../src/lib/haptics';
 import { useDriver } from '../../../src/lib/DriverProvider';
-import { COLORS, RADII } from '../../../src/lib/theme';
+import { withRetry } from '../../../src/lib/retry';
+import { COLORS } from '../../../src/lib/theme';
+import { useToast } from '../../../src/lib/ToastProvider';
 import type { ValetStats } from '../../../src/lib/types';
-import { Button } from '../../../src/components/ui/Button';
 import { Card } from '../../../src/components/ui/Card';
+import { Skeleton } from '../../../src/components/ui/Skeleton';
 
 export default function Profile() {
-  const { profile, refreshProfile, clockOut } = useDriver();
+  const { profile, refreshProfile } = useDriver();
+  const { showToast } = useToast();
   const [stats, setStats] = useState<ValetStats | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [pwStatus, setPwStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
-  const [pwError, setPwError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadStats = () => withRetry(() => api.get<ValetStats>('/api/valet/stats')).then(setStats).catch(() => {});
 
   useEffect(() => {
-    api.get<ValetStats>('/api/valet/stats').then(setStats).catch(() => {});
+    loadStats();
   }, []);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([loadStats(), refreshProfile()]);
+    setRefreshing(false);
+  };
+
   const updatePhoto = async () => {
-    setUploadError(null);
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      setUploadError('Camera access is needed to update your photo.');
+      showToast('Camera access is needed to update your photo.', 'error');
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -49,39 +57,28 @@ export default function Profile() {
     try {
       await api.patch('/api/valet/photo', { dataUrl });
       await refreshProfile();
+      haptics.success();
+      showToast('Profile photo updated', 'success');
     } catch (e) {
-      setUploadError(e instanceof Error ? e.message : 'Upload failed');
+      showToast(e instanceof ApiError ? e.message : 'Upload failed — try again.', 'error');
+      haptics.error();
     } finally {
       setUploading(false);
     }
   };
 
-  const changePassword = async () => {
-    setPwError('');
-    if (password.length < 8) {
-      setPwError('Password must be at least 8 characters.');
-      return;
-    }
-    if (password !== confirm) {
-      setPwError('Passwords do not match.');
-      return;
-    }
-    setPwStatus('saving');
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setPwError(error.message);
-      setPwStatus('error');
-    } else {
-      setPwStatus('done');
-      setPassword('');
-      setConfirm('');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Profile</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl tintColor={COLORS.white} refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Profile</Text>
+          <TouchableOpacity onPress={() => router.push('/(app)/settings')} hitSlop={10} style={styles.settingsButton}>
+            <Ionicons name="settings-outline" size={22} color={COLORS.white} />
+          </TouchableOpacity>
+        </View>
 
         <Card style={styles.profileCard}>
           <TouchableOpacity onPress={updatePhoto} disabled={uploading} style={styles.avatarWrap}>
@@ -103,68 +100,40 @@ export default function Profile() {
             {!profile.photoUrl && <Text style={styles.warning}>⚠️ Add a profile photo</Text>}
           </View>
         </Card>
-        {uploadError && <Text style={styles.pwError}>{uploadError}</Text>}
 
         <Card>
           <Text style={styles.cardTitle}>Stats</Text>
           <View style={styles.statsRow}>
-            <Stat value={stats ? String(stats.allTime.jobsCompleted) : '—'} label="Jobs done" />
-            <Stat value={stats?.allTime.ratingAvg != null ? stats.allTime.ratingAvg.toFixed(1) : '—'} label="Avg rating" />
-            <Stat value={stats ? formatCents(stats.allTime.tipsTotalCents) : '—'} label="Tips total" />
+            <Stat value={stats ? String(stats.allTime.jobsCompleted) : null} label="Jobs done" />
+            <Stat value={stats ? (stats.allTime.ratingAvg != null ? stats.allTime.ratingAvg.toFixed(1) : '—') : null} label="Avg rating" />
+            <Stat value={stats ? formatCents(stats.allTime.tipsTotalCents) : null} label="Tips total" />
           </View>
         </Card>
 
         <Card>
           <Text style={styles.cardTitle}>Today</Text>
-          <Row label="Jobs completed" value={stats ? String(stats.today.jobsCompleted) : '—'} />
-          <Row label="Tips earned" value={stats ? formatCents(stats.today.tipsTotalCents) : '—'} />
+          <Row label="Jobs completed" value={stats ? String(stats.today.jobsCompleted) : null} />
+          <Row label="Tips earned" value={stats ? formatCents(stats.today.tipsTotalCents) : null} />
         </Card>
-
-        <Card>
-          <Text style={styles.cardTitle}>Change password</Text>
-          <View style={{ gap: 8 }}>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="New password"
-              placeholderTextColor={COLORS.textMuted}
-              secureTextEntry
-              style={styles.input}
-            />
-            <TextInput
-              value={confirm}
-              onChangeText={setConfirm}
-              placeholder="Confirm new password"
-              placeholderTextColor={COLORS.textMuted}
-              secureTextEntry
-              style={styles.input}
-            />
-            {pwError ? <Text style={styles.pwError}>{pwError}</Text> : null}
-            {pwStatus === 'done' && <Text style={styles.pwDone}>Password updated.</Text>}
-            <Button label={pwStatus === 'saving' ? 'Saving…' : 'Update password'} variant="secondary" onPress={changePassword} disabled={pwStatus === 'saving'} />
-          </View>
-        </Card>
-
-        <Button label="Clock out" size="large" onPress={clockOut} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({ value, label }: { value: string | null; label: string }) {
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text style={styles.statValue}>{value}</Text>
+      {value === null ? <Skeleton width={36} height={20} style={{ marginBottom: 2 }} /> : <Text style={styles.statValue}>{value}</Text>}
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: string | null }) {
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+      {value === null ? <Skeleton width={48} height={14} /> : <Text style={styles.rowValue}>{value}</Text>}
     </View>
   );
 }
@@ -179,11 +148,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 14,
   },
-  title: {
+  titleRow: {
     marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
     fontFamily: 'Jost_700Bold',
     fontSize: 24,
     color: COLORS.white,
+  },
+  settingsButton: {
+    padding: 4,
   },
   profileCard: {
     flexDirection: 'row',
@@ -270,23 +247,5 @@ const styles = StyleSheet.create({
   rowValue: {
     fontSize: 14,
     color: COLORS.white,
-  },
-  input: {
-    height: 48,
-    borderRadius: RADII.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.black,
-    paddingHorizontal: 12,
-    color: COLORS.white,
-    fontSize: 14,
-  },
-  pwError: {
-    fontSize: 12,
-    color: COLORS.red,
-  },
-  pwDone: {
-    fontSize: 12,
-    color: COLORS.green,
   },
 });

@@ -4,12 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCents, OFF_SITE_ORIGINS } from '@laxvaletcare/shared';
-import { api } from '../../../src/lib/api';
+import { api, ApiError } from '../../../src/lib/api';
 import { useDriver } from '../../../src/lib/DriverProvider';
 import { useJobs } from '../../../src/lib/JobsProvider';
 import { ACTION_COPY, ActionType, DEPARTURE_SEQUENCE, RETURN_SEQUENCE } from '../../../src/lib/actionCopy';
+import { haptics } from '../../../src/lib/haptics';
 import { localId } from '../../../src/lib/id';
 import { COLORS, RADII } from '../../../src/lib/theme';
+import { useToast } from '../../../src/lib/ToastProvider';
 import { Badge } from '../../../src/components/ui/Badge';
 import { Card } from '../../../src/components/ui/Card';
 import { ConfirmDialog } from '../../../src/components/ui/ConfirmDialog';
@@ -39,6 +41,7 @@ export default function JobDetail() {
   const { id, type } = useLocalSearchParams<{ id: string; type: 'DEPARTURE' | 'RETURN' }>();
   const { profile } = useDriver();
   const { jobs, patchJob, refetch } = useJobs();
+  const { showToast } = useToast();
   const [flow, setFlow] = useState<{ action: ActionType; phase: 'photos' | 'confirm' } | null>(null);
   const [markingLanded, setMarkingLanded] = useState(false);
 
@@ -104,11 +107,20 @@ export default function JobDetail() {
         status: data.status,
         activityLogs: [...r.activityLogs, { id: localId(), reservationId: r.id, actorId: meId, action, detail: null, createdAt: new Date().toISOString() }],
       });
+      haptics.success();
+      showToast('Customer notified', 'success');
+      setFlow(null); // only close the confirm sheet once the action actually landed
       if (action === 'VEHICLE_DELIVERED') {
         setTimeout(() => router.back(), 400);
       }
-    } finally {
-      setFlow(null);
+    } catch (err) {
+      // Deliberately leave `flow` set to 'confirm' — ConfirmDialog re-enables
+      // its buttons on a thrown error, so the driver can just retry the same
+      // tap instead of losing their place (and any photos already uploaded)
+      // and having to start the whole step over.
+      haptics.error();
+      showToast(err instanceof ApiError ? err.message : 'Could not send this update — try again.', 'error');
+      throw err;
     }
   };
 
@@ -118,6 +130,10 @@ export default function JobDetail() {
       const flightLandedAt = new Date().toISOString();
       await api.patch(`/api/reservations/${r.id}`, { flightLandedAt });
       patchJob(r.id, { flightLandedAt });
+      haptics.tap();
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Could not mark the flight landed — try again.', 'error');
+      haptics.error();
     } finally {
       setMarkingLanded(false);
     }

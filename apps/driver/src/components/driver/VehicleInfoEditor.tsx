@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { api } from '../../lib/api';
+import { api, ApiError } from '../../lib/api';
+import { haptics } from '../../lib/haptics';
 import { COLORS, RADII } from '../../lib/theme';
+import { useToast } from '../../lib/ToastProvider';
 import type { ReservationJob } from '../../lib/types';
 
 type Field = 'vehicleColor' | 'vehicleMake' | 'vehicleModel' | 'transmission' | 'plate' | 'vehicleLocation';
@@ -22,6 +24,7 @@ export function VehicleInfoEditor({ reservation, readOnly, onSaved }: { reservat
   const [editingField, setEditingField] = useState<Field | null>(null);
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
 
   const startEdit = (field: Field) => {
     if (readOnly) return;
@@ -40,9 +43,15 @@ export function VehicleInfoEditor({ reservation, readOnly, onSaved }: { reservat
     try {
       await api.patch(`/api/reservations/${reservation.id}`, { [field]: value });
       onSaved({ [field]: value } as Partial<ReservationJob>);
+      setEditingField(null);
+      haptics.tap();
+    } catch (err) {
+      // Leave the field in edit mode with its draft intact rather than
+      // silently discarding an edit the server never actually received.
+      showToast(err instanceof ApiError ? err.message : `Could not save ${FIELD_LABEL[field]} — try again.`, 'error');
+      haptics.error();
     } finally {
       setSaving(false);
-      setEditingField(null);
     }
   };
 

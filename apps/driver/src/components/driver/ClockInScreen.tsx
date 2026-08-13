@@ -19,6 +19,8 @@ export function ClockInScreen() {
     setLoading(true);
     try {
       await clockIn();
+    } catch {
+      // clockIn() already reports this via toast — just re-enable the button.
     } finally {
       setLoading(false);
     }

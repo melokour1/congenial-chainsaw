@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { api } from '../../lib/api';
+import { api, ApiError } from '../../lib/api';
+import { haptics } from '../../lib/haptics';
 import { COLORS, RADII } from '../../lib/theme';
 import { Button } from '../ui/Button';
 
@@ -12,6 +13,10 @@ interface CameraCaptureSheetProps {
   reservationId: string;
   onDone: (photoUrls: string[]) => void;
   onCancel: () => void;
+  /** True while the caller's own onDone is still in flight (e.g. posting the
+   * job action this photo set unblocks) — disables the submit button so a
+   * slow network can't be double-tapped into two submissions. */
+  submitting?: boolean;
 }
 
 /**
@@ -22,7 +27,7 @@ interface CameraCaptureSheetProps {
  * browser can get. Vehicle condition photos are evidentiary, so the live
  * camera — not the photo library — is the only source here.
  */
-export function CameraCaptureSheet({ title, minPhotos = 4, stage, reservationId, onDone, onCancel }: CameraCaptureSheetProps) {
+export function CameraCaptureSheet({ title, minPhotos = 4, stage, reservationId, onDone, onCancel, submitting }: CameraCaptureSheetProps) {
   const [photos, setPhotos] = useState<{ url: string; uploading: boolean }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,14 +50,16 @@ export function CameraCaptureSheet({ title, minPhotos = 4, stage, reservationId,
     try {
       const data = await api.post<{ url: string }>('/api/photos', { dataUrl, stage, reservationId });
       setPhotos((p) => p.map((ph) => (ph === placeholder ? { url: data.url ?? dataUrl, uploading: false } : ph)));
+      haptics.tap();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed');
+      setError(e instanceof ApiError ? e.message : 'Upload failed — try this photo again.');
       setPhotos((p) => p.filter((ph) => ph !== placeholder));
+      haptics.error();
     }
   };
 
   const uploading = photos.some((p) => p.uploading);
-  const ready = photos.length >= minPhotos && !uploading;
+  const ready = photos.length >= minPhotos && !uploading && !submitting;
 
   return (
     <Modal animationType="slide" presentationStyle="fullScreen">
@@ -87,9 +94,10 @@ export function CameraCaptureSheet({ title, minPhotos = 4, stage, reservationId,
 
         <View style={styles.footer}>
           <Button
-            label={ready ? 'Use these photos' : `Need ${Math.max(0, minPhotos - photos.length)} more`}
+            label={submitting ? 'Submitting…' : ready ? 'Use these photos' : `Need ${Math.max(0, minPhotos - photos.length)} more`}
             size="large"
             disabled={!ready}
+            loading={submitting}
             onPress={() => onDone(photos.map((p) => p.url))}
           />
         </View>

@@ -1,5 +1,7 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from './api';
+import { withRetry } from './retry';
+import { useToast } from './ToastProvider';
 import type { JobOfferSummary, ReservationJob } from './types';
 
 interface JobsContextValue {
@@ -30,18 +32,30 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useState<ReservationJob[]>([]);
   const [pendingOffers, setPendingOffers] = useState<JobOfferSummary[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const { showToast } = useToast();
+  const pollFailingRef = useRef(false);
 
   const refetch = useCallback(async () => {
     try {
-      const data = await api.get<{ jobs: ReservationJob[]; pendingOffers: JobOfferSummary[] }>('/api/valet/jobs');
+      const data = await withRetry(() =>
+        api.get<{ jobs: ReservationJob[]; pendingOffers: JobOfferSummary[] }>('/api/valet/jobs'),
+      );
       setJobs(data.jobs ?? []);
       setPendingOffers(data.pendingOffers ?? []);
+      if (pollFailingRef.current) {
+        pollFailingRef.current = false;
+        showToast('Job list back in sync', 'success');
+      }
     } catch {
-      // transient network hiccup — next poll will retry
+      // Once per outage, not once per 6s poll tick.
+      if (!pollFailingRef.current) {
+        pollFailingRef.current = true;
+        showToast("Can't reach your job queue — retrying…", 'error');
+      }
     } finally {
       setLoaded(true);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     refetch();
